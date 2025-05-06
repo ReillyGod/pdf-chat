@@ -2,48 +2,48 @@
 
 A simple tool that ingests PDF files, builds a vector search index over their text, and then lets you chat against your PDF “knowledge base” using OpenAI function‐calling.
 
----
-
 ## Features
 
 - **PDF Processing**: Splits PDFs into overlapping text chunks, generates embeddings via OpenAI.
 - **Vector Index**: Uses FAISS to index and search those embeddings.
 - **CLI Chat Interface**: Interactive REPL that retrieves relevant chunks on demand each question.
 
----
-
 ## Installation
 
-    - Clone the github repo
+**Clone the github repo**
 
-    ```bash
-    git clone https://github.com/reillygod/pdf-chat.git
-    cd pdf-chat
-    ```
+```bash
+git clone https://github.com/reillygod/pdf-chat.git
+cd pdf-chat
+```
 
-    - Create and activate a Conda environment (or venv)
+**Create and activate a Conda environment (or venv)**
 
-    ```bash
-    conda create -n pdf-chat python=3.10 -y
-    conda activate pdf-chat
-    ```
+```bash
+conda create --name pdf-chat python=3.12 -y
+conda activate pdf-chat
+```
 
-    - Install Python dependencies
+**Install Python dependencies**
 
-    ```bash
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    ```
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-    - Add the OpenAI API key to the .env file
-    - Add any PDFs to the pdf folder (a few have been included and pre processed)
-    - The PDF names are passed to the LLM so a descriptive name is nice where possible
+- Add the OpenAI API key to the .env file
+- Add any PDFs to the pdf folder (a few have been included and pre processed)
+- The PDF names are passed to the LLM so a descriptive name is generally better
 
-    - Run the python project
+## Usage
 
-    ```bash
-    python src/main.py
-    ```
+**Run the main file**
+```bash
+python src/main.py
+```
+
+- Once the PDF's have processed enter your question in the chat
+- Type 'exit' in the chat or enter 'Ctrl+C' to close the chat
 
 ## Writeup
 
