@@ -41,11 +41,10 @@ def main():
 
     # Load the knowledgebase for RAG
     print("Building the knowledgebase...")
-    entries, index = build_kbase(str(kbase_dir))
-    print(f"Indexed {len(entries)} sections.")
+    kbase = build_kbase(str(kbase_dir))
 
     # Start the chat
-    chat_loop(client, entries, index)
+    chat_loop(client, kbase)
 
 if __name__ == "__main__":
     main()

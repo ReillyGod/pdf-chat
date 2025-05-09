@@ -45,6 +45,13 @@ python src/main.py
 - Once the PDF's have processed enter your question in the chat
 - Type 'exit' in the chat or enter 'Ctrl+C' to close the chat
 
+## New Features:
+ - Use o4-mini to process pdfs by rendering each page of the pdf as an image and using the model to output text, tables, and descriptions of images. (Takes a while)
+ - Rephrase questions after the 2nd turn of dialogue to allow for more accurate follow up questions.
+ - Calculate an embedding for the entire paper, use this during retrieval to first identify relevant papers
+ - Within relevant papers select relevant sections including those immediately before or after for added context.
+ - Cleaned up the chat code to make it more extendable.
+
 ## Writeup
 
 So the main goal here was to efficiently parse a PDF’s text. I omitted image and graph / table processing for this version due to time constraints, this would be the first thing I would address given more time. The PDF’s parsing was a bit tricky to get right and I tried using a few libraries to handle more complex objects. If the parsing was done I would use multi-modal models to generate descriptions of the images / data in the charts, adding them into the text corpus for each pdf.
