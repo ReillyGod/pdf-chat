@@ -174,12 +174,12 @@ def search_kbase(
        • Pick the 3 highest‑scoring sections and their immediate neighbors.
     3) Print diagnostics and return a concatenated string of results.
     """
-    # 1) Embed the query once
+    # Embed the query once
     q_emb = np.array(get_embedding(query, client), dtype="float32")
     q_emb /= (np.linalg.norm(q_emb) + 1e-10)
 
-    # Document-level scoring
-    doc_scores = []  # List of (ParsedDocs, score)
+    # Document-level selection
+    doc_scores = []
     for doc in kbase:
         d_emb = np.array(doc.document_embedding, dtype="float32")
         score = cosine_similarity(d_emb, q_emb)
@@ -192,19 +192,20 @@ def search_kbase(
         return ""
 
     top_score = doc_scores[0][1]
-    # Keep up to 3 docs within 0.05 of top_score
+    # Keep up to 3 docs within 0.1 of top_score
     selected = [(doc, score) for doc, score in doc_scores[:3] if score >= top_score - 0.1]
     sel_info = [f"{doc.filename} (score={score:.4f})" for doc, score in selected]
     print(f"Selected documents: {', '.join(sel_info)}")
 
     output_parts: List[str] = []
-    # 2) Section-level selection
+    # Section-level selection
     for doc, _ in selected:
         sec_scores = np.array([
             cosine_similarity(np.array(sec.embedding, dtype="float32"), q_emb)
             for sec in doc.sections
         ])
-        # Top-3 indices
+
+        # The top 3 sections
         top_idxs = np.argsort(-sec_scores)[:3]
 
         # Include sections before and after each section
@@ -219,7 +220,7 @@ def search_kbase(
         ordered = sorted(pick_idxs)
         print(f"Document '{doc.filename}': selecting {len(ordered)} sections")
 
-        # Build output block for this document
+        # Build context chunk for this document
         parts = [f"Document: {doc.filename}"]
         for i in ordered:
             parts.append(doc.sections[i].text.strip())
@@ -227,7 +228,7 @@ def search_kbase(
         block = "\n".join(parts).rstrip("\n---\n")
         output_parts.append(block)
 
-    # 3) Combine all document blocks
+    # Combine all document chunks
     return "\n\n".join(output_parts)
 
 def find_new_papers(search_request: str, top_n: int = 2) -> str:
@@ -235,6 +236,8 @@ def find_new_papers(search_request: str, top_n: int = 2) -> str:
     Constructs an arXiv API query from a natural language request, downloads top N PDFs,
     and saves metadata JSON files.
     '''
+
+    # I'll be honest, LLM Wrote most of this function, I just cleaned it up a bit
 
     print(f"Searching for new papers with Query: {search_request}")
 

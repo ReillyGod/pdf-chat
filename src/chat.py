@@ -38,7 +38,7 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
     Calls OpenAI with the new tools API to support function-calling,
     and executes get_new_papers when requested.
     """
-    # 1. Define your tools
+    # Function Definitions
     tools = [{
         "type": "function",
         "name": "get_new_papers",
@@ -94,7 +94,6 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
         )
         }]
 
-    # 2. First call: let the model decide if it wants to call your tool
     response = client.responses.create(
         model="gpt-4o-mini-2024-07-18",
         input=system_prompt + messages,
@@ -103,20 +102,20 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
 
     tool_call = response.output[0]
 
-    # Step 2: check via attribute, not subscription
+    # Handle Function Calls
     if tool_call.type == "function_call":
         args = json.loads(tool_call.arguments)
         result = None
 
         if tool_call.name == "get_new_papers":
             print("Function Called: Get New Papers")
-            # top_n is guaranteed present now
+
+            # Call function
             result = find_new_papers(
                 search_request=args["search_request"],
                 top_n=args["top_n"]
             )
 
-             # Step 3: append the function‑call and its result
             messages.append(tool_call)
             messages.append({
                 "type": "function_call_output",
@@ -124,7 +123,7 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
                 "output": f"Papers Found: {result}"
             })
 
-            # Step 4: ask the model to compose a final answer
+            # Respond with results
             second_response = client.responses.create(
                 model="gpt-4o-mini-2024-07-18",
                 input=system_prompt + messages,
@@ -139,13 +138,14 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
 
         elif tool_call.name == "search_kbase":
             print("Function Called: Search Kbase")
-            # top_n is guaranteed present now
+
+            # Call function
             result = search_kbase(
                 query=args["user_question"],
                 client=client,
                 kbase=kbase
             )
-             # Step 3: append the function‑call and its result
+            
             messages.append(tool_call)
             messages.append({
                 "type": "function_call_output",
@@ -153,7 +153,7 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
                 "output": f"Use the context from the following papers to answer the user's question: {result}"
             })
 
-            # Step 4: ask the model to compose a final answer
+            # Respond with results
             second_response = client.responses.create(
                 model="gpt-4o-mini-2024-07-18",
                 input=system_prompt + messages,
@@ -189,7 +189,10 @@ def chat_loop(client: OpenAI, kbase: List[ParsedDocs]):
 
     messages = []
 
+
+    # Main chat loop
     while True:
+        # Each turn of dialogue has a ~4 messages, remove 4 messages if chat gets long
         if len(messages) >= 16:
             messages.pop(0)
             messages.pop(0)
@@ -208,5 +211,5 @@ def chat_loop(client: OpenAI, kbase: List[ParsedDocs]):
         
         messages.append({"role": "user", "content": query})
 
-        # 5) Generate response to initial input
+        # Start the function calling pipeline
         messages = get_llm_response_functions(messages, client, kbase)
