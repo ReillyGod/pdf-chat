@@ -4,9 +4,10 @@ A simple tool that ingests PDF files, builds a vector search index over their te
 
 ## Features
 
-- **PDF Processing**: Splits PDFs into overlapping text chunks, generates embeddings via OpenAI.
-- **Vector Index**: Uses FAISS to index and search those embeddings.
-- **CLI Chat Interface**: Interactive REPL that retrieves relevant chunks on demand each question.
+- **PDF Processing**: Processes PDFs using multi-modal LLMs to process text, tables, and Images.
+- **Vector Index**: Create overlapping chunks with embeddings to use for retrieval.
+- **Search arXiv**: Search arXiv for new papers and process them.
+- **CLI Chat Interface**: Interactive cli that retrieves relevant information to answer questions or find new papers.
 
 ## Installation
 
