@@ -6,8 +6,11 @@ import json
 import glob
 import fitz
 import base64
+import requests
+import xml.etree.ElementTree as ET
+import urllib.parse
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 from openai import OpenAI
 from langchain.text_splitter import CharacterTextSplitter
@@ -226,3 +229,64 @@ def search_kbase(
 
     # 3) Combine all document blocks
     return "\n\n".join(output_parts)
+
+def find_new_papers(search_request: str, top_n: int = 2) -> str:
+    '''
+    Constructs an arXiv API query from a natural language request, downloads top N PDFs,
+    and saves metadata JSON files.
+    '''
+
+    print(f"Searching for new papers with Query: {search_request}")
+
+    output_dir = 'pdf'
+    prefix = 'show me papers on '
+    req_lower = search_request.lower().strip()
+    terms = (search_request[len(prefix):].strip() if req_lower.startswith(prefix) else search_request.strip())
+
+    encoded = urllib.parse.quote(terms)
+    api_url = f'https://export.arxiv.org/api/query?search_query=all:{encoded}&start=0&max_results={top_n}'
+
+    os.makedirs(output_dir, exist_ok=True)
+    resp = requests.get(api_url)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.text)
+    ns = {'atom': 'http://www.w3.org/2005/Atom', 'arxiv': 'http://arxiv.org/schemas/atom'}
+    entries = root.findall('atom:entry', ns)
+
+    results: List[str] = []
+    for entry in entries[:top_n]:
+        title = entry.find('atom:title', ns).text.strip()
+        authors = [a.find('atom:name', ns).text.strip() for a in entry.findall('atom:author', ns)]
+        summary = entry.find('atom:summary', ns).text.strip()
+
+        pdf_url = None
+        for link in entry.findall('atom:link', ns):
+            if link.attrib.get('title') == 'pdf' or link.attrib.get('type') == 'application/pdf':
+                pdf_url = link.attrib['href']
+                break
+        if not pdf_url:
+            abs_id = entry.find('atom:id', ns).text.strip()
+            pdf_url = abs_id.replace('/abs/', '/pdf/') + '.pdf'
+
+        safe_title = ''.join(c if c.isalnum() or c in (' ', '_') else '_' for c in title).replace(' ', '_')
+        pdf_path = os.path.join(output_dir, f"{safe_title}.pdf")
+        json_path = os.path.join(output_dir, f"{safe_title}.json")
+
+        pdf_resp = requests.get(pdf_url)
+        pdf_resp.raise_for_status()
+        with open(pdf_path, 'wb') as f:
+            f.write(pdf_resp.content)
+
+        metadata = {
+            'title': title,
+            'authors': authors,
+            'summary': summary,
+            'pdf_url': pdf_url
+        }
+
+        print(f"Paper Found:\n{metadata['title']}")
+        results.append(metadata['title'])
+
+    
+    return str(results)

@@ -52,6 +52,12 @@ python src/main.py
  - Within relevant papers select relevant sections including those immediately before or after for added context.
  - Cleaned up the chat code to make it more extendable.
 
+## Function Calling:
+ - Added function to query Arxiv for new Papers on a topic
+ - Made the kbase query into a function
+ - The model now decides between a query of the kbase or finding new papers to add to the kbase with each question asked.
+ - Note: New Papers are intentionally not processed until the chat has been reloaded. This is due to somewhat long processing times with the LLM.
+
 ## Writeup
 
 So the main goal here was to efficiently parse a PDF’s text. I omitted image and graph / table processing for this version due to time constraints, this would be the first thing I would address given more time. The PDF’s parsing was a bit tricky to get right and I tried using a few libraries to handle more complex objects. If the parsing was done I would use multi-modal models to generate descriptions of the images / data in the charts, adding them into the text corpus for each pdf.
