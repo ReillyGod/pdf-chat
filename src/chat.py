@@ -150,7 +150,9 @@ def get_llm_response_functions(messages: List[Dict[str, str]], client: OpenAI, k
             messages.append({
                 "type": "function_call_output",
                 "call_id": tool_call.call_id,
-                "output": f"Use the context from the following papers to answer the user's question: {result}"
+                "output": (f"# Use the context from the following papers to answer the user's question:\n{result}\n"
+                           "# Keep your answers concise. Do not give long winded answers.\n"
+                           "# Only answer the question with information provided by the paper.\n")
             })
 
             # Respond with results
